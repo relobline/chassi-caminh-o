@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrafenoChassi — Chassi Modular de Compósito com Grafeno</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:       #1a9e75;
+      --green-dark:  #0f6e56;
+      --green-light: #e1f5ee;
+      --green-mid:   #9fe1cb;
+      --amber:       #ef9f27;
+      --amber-bg:    #faeeda;
+      --amber-dark:  #854f0b;
+      --coral:       #d85a30;
+      --coral-bg:    #faece7;
+
+      --bg:     #f8f7f4;
+      --bg2:    #edecea;
+      --bg3:    #ffffff;
+      --border: rgba(0,0,0,0.09);
+      --text:   #18180f;
+      --text2:  #5a5950;
+      --text3:  #999890;
+
+      --r:    8px;
+      --r-lg: 16px;
+      --r-xl: 24px;
+
+      --nav-h: 60px;
+      --max:   1100px;
+      --pad:   clamp(1.25rem, 5vw, 3rem);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:   #131310;
+        --bg2:  #1e1e1b;
+        --bg3:  #252520;
+        --border: rgba(255,255,255,0.08);
+        --text:   #f0efe8;
+        --text2:  #a8a79f;
+        --text3:  #6a6960;
+      }
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg); color: var(--text);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    .pill-tag {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--green); border: 1px solid var(--green-mid);
+      background: var(--green-light); border-radius: 100px;
+      padding: 5px 14px;
+    }
+    .pill-tag::before {
+      content: ''; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+      animation: blink 2.5s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity:1; } 50% { opacity:0.3; }
+    }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 0.5px; background: var(--border);
+    }
+
+  
+    nav {
+      height: var(--nav-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 var(--pad);
+      position: sticky; top: 0; z-index: 200;
+      background: color-mix(in srgb, var(--bg) 80%, transparent);
+      backdrop-filter: blur(20px) saturate(1.5);
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; font-weight: 500; letter-spacing: 0.1em;
+      color: var(--green); display: flex; align-items: center; gap: 9px;
+    }
+    .nav-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      animation: blink 2.5s ease-in-out infinite;
+    }
+    .nav-logo span { color: var(--text3); font-weight: 400; }
+
+    .nav-links { display: flex; }
+    .nav-links a {
+      font-size: 13px; color: var(--text2); text-decoration: none;
+      padding: 8px 14px; border-radius: var(--r);
+      transition: color 0.15s, background 0.15s; cursor: pointer;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--bg2); }
+
+    .btn-nav {
+      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+      background: var(--green); color: #fff; border: none;
+      border-radius: 100px; padding: 8px 20px; cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-nav:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .hero {
+      padding: clamp(4rem,10vw,8rem) var(--pad) clamp(3rem,6vw,5rem);
+      max-width: var(--max); margin: 0 auto;
+      display: grid; grid-template-columns: 1fr auto; gap: 3rem; align-items: center;
+    }
+
+    h1 {
+      font-size: clamp(38px, 5.5vw, 66px); font-weight: 800;
+      line-height: 1.04; letter-spacing: -0.025em; margin: 1.5rem 0 1.25rem;
+    }
+    h1 em { font-style: normal; color: var(--green); }
+
+    .hero-sub {
+      font-size: clamp(15px,1.8vw,17px); color: var(--text2);
+      line-height: 1.8; max-width: 510px; margin-bottom: 2.5rem;
+    }
+
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn-primary {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+      background: var(--green); color: #fff; border: none;
+      border-radius: 100px; padding: 14px 30px; cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s; text-decoration: none; display: inline-block;
+    }
+    .btn-primary:hover { opacity: 0.87; transform: translateY(-1px); }
+
+    .btn-ghost {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
+      background: none; color: var(--text2);
+      border: 1px solid var(--border); border-radius: 100px;
+      padding: 13px 26px; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s; text-decoration: none; display: inline-block;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text3); }
+
+    .hero-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2rem; }
+    .badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      padding: 5px 13px; border-radius: 100px; border: 0.5px solid;
+    }
+    .badge-g { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); }
+    .badge-a { background: var(--amber-bg);   color: var(--amber-dark); border-color: #fac775; }
+    .badge-n { background: var(--bg2);        color: var(--text2);      border-color: var(--border); }
+
+    /* Hero right: stat cards */
+    .hero-stats {
+      display: flex; flex-direction: column; gap: 10px; min-width: 160px;
+    }
+    .stat-card {
+      background: var(--bg3); border: 0.5px solid var(--border);
+      border-radius: var(--r-lg); padding: 1.25rem 1.5rem;
+    }
+    .stat-val { font-size: 30px; font-weight: 800; color: var(--green); line-height: 1; }
+    .stat-lbl { font-size: 11px; color: var(--text3); margin-top: 5px; font-family: 'JetBrains Mono', monospace; }
+
+    /* ─── METRICS BAR ─── */
+    .divider { height: 0.5px; background: var(--border); }
+
+    .metrics-bar {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      max-width: var(--max); margin: 0 auto;
+    }
+    .metric {
+      padding: 2rem var(--pad);
+      border-right: 0.5px solid var(--border);
+      transition: background 0.15s;
+    }
+    .metric:last-child { border-right: none; }
+    .metric:hover { background: var(--bg2); }
+    .metric-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+    .metric-val { font-size: 30px; font-weight: 800; color: var(--green); line-height: 1; }
+    .metric-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+    .main { max-width: var(--max); margin: 0 auto; }
+
+    section {
+      padding: clamp(2.5rem,5vw,4.5rem) var(--pad);
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .chassis-box {
+      background: var(--bg3); border: 0.5px solid var(--border);
+      border-radius: var(--r-xl); overflow: hidden;
+    }
+    .chassis-inner { padding: 2.5rem clamp(1rem,3vw,2.5rem); overflow-x: auto; }
+    .chassis-footer {
+      padding: 1rem 1.75rem; border-top: 0.5px solid var(--border);
+      background: var(--bg2); display: flex; gap: 2rem; flex-wrap: wrap;
+    }
+    .leg {
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2);
+    }
+    .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    .sim-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;
+    }
+    .sim-panel {
+      background: var(--bg3); border: 0.5px solid var(--border);
+      border-radius: var(--r-xl); padding: 2rem;
+    }
+    .panel-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 1.75rem; }
+
+    .ctrl { margin-bottom: 1.5rem; }
+    .ctrl-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--text2); margin-bottom: 9px;
+    }
+    .ctrl-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text); }
+
+    input[type=range] {
+      width: 100%; height: 3px; border-radius: 2px;
+      appearance: none; outline: none; cursor: pointer;
+      background: linear-gradient(to right, var(--green) var(--p,50%), var(--bg2) var(--p,50%));
+    }
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--green); border: 2px solid var(--bg3);
+      box-shadow: 0 1px 5px rgba(0,0,0,0.22);
+    }
+
+    .wbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .wbar-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); width: 74px; text-align: right; }
+    .wbar-track { flex: 1; height: 12px; background: var(--bg2); border-radius: 2px; overflow: hidden; }
+    .wbar-fill { height: 100%; border-radius: 2px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+    .wbar-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2); width: 58px; }
+
+    .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+    .res-cell { background: var(--bg2); border-radius: var(--r); padding: 1rem 1.1rem; }
+    .res-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 6px; }
+    .res-num { font-size: 21px; font-weight: 800; color: var(--text); }
+    .res-num.green { color: var(--green); }
+    .res-num.coral { color: var(--coral); }
+
+    .chart-wrap { position: relative; height: 190px; }
+
+  
+    .rs-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 1px; background: var(--border);
+      border-radius: var(--r-xl); overflow: hidden;
+    }
+    .rs-card { background: var(--bg3); padding: 2.5rem; }
+    .rs-icon { font-size: 32px; margin-bottom: 1rem; }
+    .rs-num  { font-size: 46px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+    .rs-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 1rem; }
+    .rs-body { font-size: 14px; color: var(--text2); line-height: 1.75; }
+
+    .cycle-flow {
+      display: flex; align-items: flex-start;
+      overflow-x: auto; padding-bottom: 0.5rem; gap: 0;
+    }
+    .cycle-node {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 1rem 0.75rem; min-width: 95px; flex-shrink: 0;
+      border-radius: var(--r-lg); cursor: pointer;
+      border: 2px solid transparent; transition: background 0.15s, border-color 0.15s;
+    }
+    .cycle-node:hover { background: var(--bg2); }
+    .cycle-node.active { background: var(--green-light); border-color: var(--green-mid); }
+    .cycle-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 10px;
+      transition: transform 0.15s;
+    }
+    .cycle-node:hover .cycle-icon { transform: scale(1.1); }
+    .cycle-lbl { font-size: 12px; font-weight: 600; color: var(--text); }
+    .cycle-sub { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+    .cycle-arr { align-self: center; padding: 0 4px; color: var(--text3); font-size: 14px; flex-shrink: 0; }
+
+    .cycle-detail {
+      margin-top: 1.5rem; padding: 1.5rem 2rem;
+      background: var(--bg3); border: 0.5px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: 0 var(--r-lg) var(--r-lg) 0;
+      font-size: 14px; color: var(--text2); line-height: 1.75;
+    }
+    .cycle-detail strong { color: var(--text); font-weight: 600; }
+
+    .timeline { padding-left: 1.5rem; border-left: 1px solid var(--border); }
+    .tl-item { position: relative; padding: 0 0 2.5rem 2rem; }
+    .tl-item:last-child { padding-bottom: 0; }
+    .tl-dot {
+      position: absolute; left: -7px; top: 3px;
+      width: 13px; height: 13px; border-radius: 50%;
+      background: var(--bg3); border: 2px solid var(--green);
+    }
+    .tl-dot.filled { background: var(--green); }
+    .tl-year { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; color: var(--green); margin-bottom: 6px; }
+    .tl-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .tl-desc  { font-size: 14px; color: var(--text2); line-height: 1.7; }
+
+    footer {
+      border-top: 0.5px solid var(--border);
+      padding: 2rem var(--pad); max-width: var(--max); margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 0.75rem;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 9px; }
+    .footer-logo { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--green); }
+    .footer-note { font-size: 12px; color: var(--text3); }
+
+    @media (max-width: 880px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-stats { flex-direction: row; flex-wrap: wrap; }
+      .stat-card { flex: 1; min-width: 130px; }
+      .metrics-bar { grid-template-columns: 1fr 1fr; }
+      .metric:nth-child(2) { border-right: none; }
+      .metric:nth-child(3) { border-top: 0.5px solid var(--border); }
+      .metric:last-child   { border-top: 0.5px solid var(--border); }
+      .sim-grid { grid-template-columns: 1fr; }
+      .rs-grid  { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .nav-links, .btn-nav { display: none; }
+      .hero-stats { display: none; }
+      .metrics-bar { grid-template-columns: 1fr 1fr; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+    #logo{
+      position:fixed;
+      height:100px;
+      width:100px;
+      top:80px;
+      left:50px;
+      background-image:url('logoff.jpeg');
+      background-repeat: no-repeat;
+      background-size: 100%;
+      border: solid 5px orange;
+      box-shadow: black 2px;
+      border-left: cadetblue 5px solid;
+      border-right: cadetblue 5px solid;
+    }
+    .oculto{
+      display:none;
+      color: black;
+      border-radius: 5%;
+      border:black 0.1px solid;
+      font-size:100%;
+      background: orange;
+    }
+    #logo:hover .oculto{
+      display:block;
+    }
+    
+  </style>
+</head>
+<body>
+
+  <div id="logo">
+    <div class="oculto">FIRST FÊNIX</div>
+  </div>
+
+<nav>
+  <div class="nav-logo">
+    <div class="nav-dot"></div>
+    GRAFENO<span>CHASSI</span>
+  </div>
+  <div class="nav-links">
+    <a onclick="go('sim')">Simulador</a>
+    <a onclick="go('ciclo')">Ciclo de Vida</a>
+    <a onclick="go('roadmap')">Roadmap</a>
+  </div>
+  <button class="btn-nav" onclick="go('sim')">Simular agora</button>
+</nav>
+
+
+<div class="hero">
+  <div>
+    <div class="pill-tag">Inovação em Engenharia de Materiais</div>
+    <h1>O chassi que<br>muda <em>tudo</em></h1>
+    <p class="hero-sub">
+      Fibra de carbono com 10% de grafeno — 60% mais leve que o aço,
+      modular sem solda, projetado para durar décadas e retornar ao
+      ciclo produtivo sem perdas.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="go('sim')">Explorar simulador</button>
+      <button class="btn-ghost"   onclick="go('ciclo')">Ver ciclo de vida</button>
+    </div>
+    <div class="hero-badges">
+      <span class="badge badge-g">Fibra de carbono + 10% grafeno</span>
+      <span class="badge badge-a">Design modular sem solda</span>
+      <span class="badge badge-n">Pirólise com 90% de recuperação</span>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-card">
+      <div class="stat-val">60%</div>
+      <div class="stat-lbl">redução de peso</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">+3.5t</div>
+      <div class="stat-lbl">carga útil extra</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">90%</div>
+      <div class="stat-lbl">fibra recuperada</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+
+<div class="metrics-bar">
+  <div class="metric">
+    <div class="metric-lbl">Redução de peso</div>
+    <div class="metric-val">60%</div>
+    <div class="metric-sub">9.000 kg → 3.500 kg</div>
+  </div>
+  <div class="metric">
+    <div class="metric-lbl">Carga útil extra</div>
+    <div class="metric-val">+3.500 kg</div>
+    <div class="metric-sub">por viagem</div>
+  </div>
+  <div class="metric">
+    <div class="metric-lbl">Economia média / ano</div>
+    <div class="metric-val">R$18k</div>
+    <div class="metric-sub">em combustível</div>
+  </div>
+  <div class="metric">
+    <div class="metric-lbl">Recuperação na pirólise</div>
+    <div class="metric-val">90%</div>
+    <div class="metric-sub">fibra com propriedades preservadas</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="main">
+
+
+  <section>
+    <div class="section-label">Arquitetura modular — vista explodida</div>
+    <div class="chassis-box">
+      <div class="chassis-inner">
+        <svg viewBox="0 0 720 228" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:720px;display:block;margin:0 auto;min-width:460px">
+          
+          <rect x="40" y="94" width="640" height="26" rx="5" fill="#1a9e75" opacity="0.92"/>
+          <rect x="40" y="134" width="640" height="26" rx="5" fill="#1a9e75" opacity="0.92"/>
+          
+          <line x1="40" y1="100" x2="680" y2="100" stroke="#0f6e56" stroke-width="0.6" opacity="0.5"/>
+          <line x1="40" y1="106" x2="680" y2="106" stroke="#0f6e56" stroke-width="0.6" opacity="0.3"/>
+          <line x1="40" y1="140" x2="680" y2="140" stroke="#0f6e56" stroke-width="0.6" opacity="0.5"/>
+          <line x1="40" y1="146" x2="680" y2="146" stroke="#0f6e56" stroke-width="0.6" opacity="0.3"/>
+          
+          <rect x="96"  y="91" width="16" height="72" rx="3" fill="#0a5040"/>
+          <rect x="208" y="91" width="16" height="72" rx="3" fill="#0a5040"/>
+          <rect x="328" y="91" width="16" height="72" rx="3" fill="#0a5040"/>
+          <rect x="448" y="91" width="16" height="72" rx="3" fill="#0a5040"/>
+          <rect x="568" y="91" width="16" height="72" rx="3" fill="#0a5040"/>
+          
+          <rect x="90"  y="44" width="28" height="34" rx="6" fill="#ef9f27"/>
+          <rect x="202" y="44" width="28" height="34" rx="6" fill="#ef9f27"/>
+          <rect x="322" y="44" width="28" height="34" rx="6" fill="#ef9f27"/>
+          <rect x="442" y="44" width="28" height="34" rx="6" fill="#ef9f27"/>
+          <rect x="562" y="44" width="28" height="34" rx="6" fill="#ef9f27"/>
+          
+          <circle cx="104" cy="55" r="2.5" fill="#854f0b" opacity="0.7"/>
+          <circle cx="104" cy="68" r="2.5" fill="#854f0b" opacity="0.7"/>
+          <circle cx="336" cy="55" r="2.5" fill="#854f0b" opacity="0.7"/>
+          <circle cx="336" cy="68" r="2.5" fill="#854f0b" opacity="0.7"/>
+          
+          <line x1="104" y1="78" x2="104" y2="91" stroke="#ef9f27" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <line x1="216" y1="78" x2="216" y2="91" stroke="#ef9f27" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <line x1="336" y1="78" x2="336" y2="91" stroke="#ef9f27" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <line x1="456" y1="78" x2="456" y2="91" stroke="#ef9f27" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <line x1="576" y1="78" x2="576" y2="91" stroke="#ef9f27" stroke-width="1.5" stroke-dasharray="3,2"/>
+          
+          <rect x="50"  y="174" width="128" height="18" rx="4" fill="#d85a30" opacity="0.85"/>
+          <rect x="222" y="174" width="128" height="18" rx="4" fill="#d85a30" opacity="0.85"/>
+          <rect x="395" y="174" width="128" height="18" rx="4" fill="#7c3aad" opacity="0.8"/>
+          <line x1="90"  y1="162" x2="90"  y2="174" stroke="#d85a30" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <line x1="265" y1="162" x2="265" y2="174" stroke="#d85a30" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <line x1="445" y1="162" x2="445" y2="174" stroke="#7c3aad" stroke-width="1.5" stroke-dasharray="3,2"/>
+          
+          <text x="360" y="111" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#cef3e5" font-weight="500">Longarina — Fibra de Carbono + Grafeno</text>
+          <text x="104" y="36"  text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#854f0b">Conector M</text>
+          <text x="456" y="36"  text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#854f0b">Conector M</text>
+          <text x="114" y="200" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#8a2a10">Absorção Impacto</text>
+          <text x="458" y="200" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5a1d8a">Proteção Elétrica</text>
+        </svg>
+      </div>
+      <div class="chassis-footer">
+        <div class="leg"><div class="leg-dot" style="background:#1a9e75"></div>Estrutural compósito</div>
+        <div class="leg"><div class="leg-dot" style="background:#ef9f27"></div>Conector modular</div>
+        <div class="leg"><div class="leg-dot" style="background:#d85a30"></div>Absorção de impacto</div>
+        <div class="leg"><div class="leg-dot" style="background:#7c3aad"></div>Proteção elétrica</div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section id="sim">
+    <div class="section-label">Simulador de impacto operacional</div>
+    <div class="sim-grid">
+
+      <div class="sim-panel">
+        <div class="panel-title">Parâmetros da frota</div>
+
+        <div class="ctrl">
+          <div class="ctrl-head"><span>Km rodados por ano</span><span class="ctrl-val" id="km-val">150.000 km</span></div>
+          <input type="range" id="km" min="50000" max="300000" step="10000" value="150000">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head"><span>Consumo (km/L)</span><span class="ctrl-val" id="cons-val">3,0 km/L</span></div>
+          <input type="range" id="cons" min="2" max="5" step="0.1" value="3">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head"><span>Preço do diesel (R$/L)</span><span class="ctrl-val" id="diesel-val">R$ 6,50</span></div>
+          <input type="range" id="diesel" min="4" max="10" step="0.1" value="6.5">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head"><span>Ganho de eficiência</span><span class="ctrl-val" id="eff-val">15%</span></div>
+          <input type="range" id="eff" min="5" max="25" step="1" value="15">
+        </div>
+
+        <div style="margin-top:1.5rem">
+          <div class="wbar-row">
+            <span class="wbar-lbl">Aço</span>
+            <div class="wbar-track"><div class="wbar-fill" style="width:100%;background:#888780"></div></div>
+            <span class="wbar-num">9.000 kg</span>
+          </div>
+          <div class="wbar-row">
+            <span class="wbar-lbl">Compósito</span>
+            <div class="wbar-track"><div class="wbar-fill" style="width:38.9%;background:#1a9e75"></div></div>
+            <span class="wbar-num">3.500 kg</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sim-panel">
+        <div class="panel-title">Resultados estimados</div>
+        <div class="res-grid">
+          <div class="res-cell">
+            <div class="res-lbl">Gasto atual/ano</div>
+            <div class="res-num coral" id="r-atual">—</div>
+          </div>
+          <div class="res-cell">
+            <div class="res-lbl">Gasto novo/ano</div>
+            <div class="res-num" id="r-novo">—</div>
+          </div>
+          <div class="res-cell">
+            <div class="res-lbl">Economia anual</div>
+            <div class="res-num green" id="r-eco">—</div>
+          </div>
+          <div class="res-cell">
+            <div class="res-lbl">Carga extra</div>
+            <div class="res-num green">+3.500 kg</div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="simChart" role="img" aria-label="Comparação de custo anual de combustível entre chassi de aço e chassi compósito com grafeno">Gráfico de barras comparativo.</canvas>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  
+  <section>
+    <div class="section-label">Os 3Rs respondidos</div>
+    <div class="rs-grid">
+      <div class="rs-card">
+        <div class="rs-icon">🌿</div>
+        <div class="rs-num" style="color:var(--green)">R1</div>
+        <div class="rs-name" style="color:var(--green)">Reduzir</div>
+        <div class="rs-body">Menos aço, menos energia na fundição, menos carbono emitido. A fabricação do compósito é mais intensa inicialmente, mas o ciclo de vida completo vence: durabilidade superior, leveza e reciclabilidade compensam em 2–3 anos de operação.</div>
+      </div>
+      <div class="rs-card">
+        <div class="rs-icon">🔄</div>
+        <div class="rs-num" style="color:var(--amber)">R2</div>
+        <div class="rs-name" style="color:var(--amber)">Reusar</div>
+        <div class="rs-body">Compósito não corrói, não fadiga como aço. Conexões modulares sem solda permitem que seções inteiras sejam desmontadas e reinstaladas em outro caminhão diretamente, sem reprocessamento e sem perda de propriedades.</div>
+      </div>
+      <div class="rs-card">
+        <div class="rs-icon">♻️</div>
+        <div class="rs-num" style="color:var(--coral)">R3</div>
+        <div class="rs-name" style="color:var(--coral)">Reciclar</div>
+        <div class="rs-body">Pirólise recupera até 90% da fibra com propriedades preservadas. O gás gerado no processo alimenta a própria fabricação — ciclo fechado, resíduo zero, energia circular integrada à cadeia produtiva.</div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section id="ciclo">
+    <div class="section-label">Ciclo de vida completo — clique para explorar</div>
+    <div class="cycle-flow">
+      <div class="cycle-node active" onclick="setCycle(0)">
+        <div class="cycle-icon" style="background:#e1f5ee">🏭</div>
+        <div class="cycle-lbl">Fabricação</div>
+        <div class="cycle-sub">Grafeno + CF</div>
+      </div>
+      <span class="cycle-arr">›</span>
+      <div class="cycle-node" onclick="setCycle(1)">
+        <div class="cycle-icon" style="background:#e6f1fb">🚛</div>
+        <div class="cycle-lbl">Operação</div>
+        <div class="cycle-sub">15–20 anos</div>
+      </div>
+      <span class="cycle-arr">›</span>
+      <div class="cycle-node" onclick="setCycle(2)">
+        <div class="cycle-icon" style="background:#faeeda">🔧</div>
+        <div class="cycle-lbl">Reparo</div>
+        <div class="cycle-sub">Troca modular</div>
+      </div>
+      <span class="cycle-arr">›</span>
+      <div class="cycle-node" onclick="setCycle(3)">
+        <div class="cycle-icon" style="background:#eaf3de">♻️</div>
+        <div class="cycle-lbl">Reuso</div>
+        <div class="cycle-sub">Novo caminhão</div>
+      </div>
+      <span class="cycle-arr">›</span>
+      <div class="cycle-node" onclick="setCycle(4)">
+        <div class="cycle-icon" style="background:#faece7">🔥</div>
+        <div class="cycle-lbl">Pirólise</div>
+        <div class="cycle-sub">90% recuperado</div>
+      </div>
+      <span class="cycle-arr">›</span>
+      <div class="cycle-node" onclick="setCycle(0)" style="opacity:0.5">
+        <div class="cycle-icon" style="background:#e1f5ee">🏭</div>
+        <div class="cycle-lbl">Refabricação</div>
+        <div class="cycle-sub">Ciclo fechado</div>
+      </div>
+    </div>
+    <div class="cycle-detail" id="cycle-detail">
+      <strong>Fabricação:</strong> Fibra de carbono + 10% grafeno. Processo mais intenso em energia que o aço, mas compensa no ciclo de vida completo. Módulos produzidos em seções padronizadas com conectores intercambiáveis. A pegada de carbono da fabricação é compensada em 2–3 anos de operação pela eficiência energética do veículo.
+    </div>
+  </section>
+
+  
+  <section id="roadmap">
+    <div class="section-label">Roadmap de viabilidade industrial</div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot filled"></div>
+        <div class="tl-year">Hoje</div>
+        <div class="tl-title">Validação Laboratorial</div>
+        <div class="tl-desc">Fibra de carbono com grafeno existe com literatura científica publicada. Resistência à tração 40% superior confirmada. Aviação e F1 usam compósitos em estruturas críticas há décadas. O custo da fibra de carbono caiu 90% em 20 anos — a trajetória aponta para viabilidade industrial em 10–15 anos.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-year">2028–30</div>
+        <div class="tl-title">Protótipos de Escala Real</div>
+        <div class="tl-desc">Primeiros chassis de compósito com grafeno em escala de caminhão pesado. Parceria com montadoras para testes em condições reais. Desenvolvimento do processo de pirólise integrado à linha de fabricação.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-year">2033–35</div>
+        <div class="tl-title">Pré-Produção Industrial</div>
+        <div class="tl-desc">Custo da fibra viável para transporte pesado. Padronização dos conectores modulares. Certificação regulatória. Primeiras frotas comerciais em operação piloto com infraestrutura de pirólise integrada.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-year">2038–40</div>
+        <div class="tl-title">Escala Industrial Plena</div>
+        <div class="tl-desc">Produção em massa com TCO competitivo ao aço. Infraestrutura de pirólise integrada à cadeia de valor. Ciclo fechado operacional. Resíduo efetivo próximo de zero.</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div style="border-top:0.5px solid var(--border)">
+  <footer>
+    <div class="footer-brand">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
+      <span class="footer-logo">GRAFENO CHASSI</span>
+    </div>
+    <div class="footer-note">Protótipo conceitual · dados baseados em literatura científica publicada</div>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+'use strict';
+
+
+function go(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+function fmt(v) {
+  if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1) + 'M';
+  if (v >= 1e3) return 'R$ ' + Math.round(v / 1000) + 'k';
+  return 'R$ ' + Math.round(v);
+}
+
+
+function updateGradient(el) {
+  const pct = ((+el.value - +el.min) / (+el.max - +el.min) * 100).toFixed(1) + '%';
+  el.style.setProperty('--p', pct);
+}
+
+
+const CYCLE = [
+  { title: 'Fabricação',     desc: 'Fibra de carbono + 10% grafeno. Processo mais intenso em energia que o aço, mas compensa no ciclo de vida completo. Módulos produzidos em seções padronizadas com conectores intercambiáveis. A pegada de carbono é compensada em 2–3 anos pela eficiência energética do veículo.' },
+  { title: 'Operação',       desc: '15 a 20 anos de vida útil estimada. Sem corrosão, sem fadiga equivalente ao aço. Redução de 60% no peso libera 3.500 kg de carga útil por viagem. Economia de R$12k a R$24k/ano em combustível. Manutenção reduzida pela ausência de componentes soldados.' },
+  { title: 'Reparo Modular', desc: 'Troca de seção, não do chassi inteiro. Conexões sem solda, parafusos padronizados, desmontagem em horas. A seção removida entra no ciclo de reuso ou pirólise — reduz custo de manutenção e tempo de inatividade da frota.' },
+  { title: 'Reuso Direto',   desc: 'Seções em bom estado vão direto para outro caminhão, sem reprocessamento e sem energia adicional. Design modular garante compatibilidade entre modelos. Energia zero para recuperar o material — valor total preservado.' },
+  { title: 'Pirólise',       desc: '90% da fibra de carbono recuperada com propriedades preservadas. O gás gerado é capturado e usado como energia para a própria fabricação — ciclo fechado. Resíduo efetivo próximo de zero. O material retroalimenta diretamente a linha de produção.' },
+];
+
+function setCycle(idx) {
+  document.querySelectorAll('.cycle-node').forEach((n, i) => n.classList.toggle('active', i === idx));
+  const d = CYCLE[idx];
+  document.getElementById('cycle-detail').innerHTML = `<strong>${d.title}:</strong> ${d.desc}`;
+}
+
+
+let chartInst = null;
+
+function drawChart(atual, novo) {
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const tColor = isDark ? 'rgba(160,158,148,0.75)' : 'rgba(100,99,89,0.75)';
+  const gColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+  if (chartInst) chartInst.destroy();
+  chartInst = new Chart(document.getElementById('simChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Chassi Aço', 'Chassi Compósito'],
+      datasets: [{
+        data: [Math.round(atual), Math.round(novo)],
+        backgroundColor: ['rgba(136,135,128,0.55)', 'rgba(26,158,117,0.75)'],
+        borderRadius: 6,
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.raw) } }
+      },
+      scales: {
+        y: {
+          grid: { color: gColor },
+          ticks: { color: tColor, font: { size: 11, family: "'JetBrains Mono', monospace" }, callback: v => fmt(v) }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: tColor, font: { size: 12 } }
+        }
+      }
+    }
+  });
+}
+
+
+function updateSim() {
+  const km     = parseInt(document.getElementById('km').value);
+  const cons   = parseFloat(document.getElementById('cons').value);
+  const diesel = parseFloat(document.getElementById('diesel').value);
+  const eff    = parseInt(document.getElementById('eff').value);
+
+  document.getElementById('km-val').textContent    = (km / 1000).toFixed(0) + '.000 km';
+  document.getElementById('cons-val').textContent  = cons.toFixed(1).replace('.', ',') + ' km/L';
+  document.getElementById('diesel-val').textContent = 'R$ ' + diesel.toFixed(2).replace('.', ',');
+  document.getElementById('eff-val').textContent   = eff + '%';
+
+  const litros = km / cons;
+  const atual  = litros * diesel;
+  const novo   = atual * (1 - eff / 100);
+
+  document.getElementById('r-atual').textContent = fmt(atual);
+  document.getElementById('r-novo').textContent  = fmt(novo);
+  document.getElementById('r-eco').textContent   = fmt(atual - novo);
+
+  drawChart(atual, novo);
+}
+
+
+['km', 'cons', 'diesel', 'eff'].forEach(id => {
+  const el = document.getElementById(id);
+  updateGradient(el);
+  el.addEventListener('input', () => { updateGradient(el); updateSim(); });
+});
+
+updateSim();
+</script>
+</body>
+</html>
